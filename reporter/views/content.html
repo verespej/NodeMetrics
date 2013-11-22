@@ -3,10 +3,10 @@
 <body>
 
 <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/highcharts.src.js"></script>
 <script src="http://code.highcharts.com/modules/exporting.js"></script>
 
-<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+<div id="container1" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
 
 
 <script>
@@ -34,8 +34,8 @@ data = [{
     21000, 20000, 19000, 18000, 18000, 17000, 16000]
 }, {
     name: 'Test Data',
-    // For some reason, not including Null will cause the graph to stretch to year 0
-    data: [null],
+    // For some reason, not including Null will cause the graph to stretch to include year 0
+    data: [null]
 }];
 
 
@@ -46,79 +46,114 @@ data = [{
 function addDatum () {
   console.log('whadup');
   data[2].data.push(Math.random() * 40000);
+  g.update();
 }
-
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 /*  Highchart Graph generator       */
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-graph = {
-  chart: {
-      type: 'area',
-      events: { 
-        load: function () { 
-          // Insert code to dynamically update the chart here
+Graph = function (jquery, data) {
+  highchart = {
+    chart: {
+        type: 'area',
+        events: { 
+          /* Sirius: This is code I've added to allow for dynamic data display. */
+          /*
+          load: function () { 
 
-          // Series is bound to the data array above. Index 2 
-          // is the 'Test Data' object.
-          var series = this.series[2];
-          setInterval(function () {
-            series.update();
-          }, 100);
-        }
-      }
-  },
-  title: {
-      text: 'US and USSR nuclear stockpiles'
-  },
-  subtitle: {
-      text: 'Source: <a href="http://thebulletin.metapress.com/content/c4120650912x74k7/fulltext.pdf">'+
-          'thebulletin.metapress.com</a>'
-  },
-  xAxis: {
-      labels: {
-          formatter: function() {
-              return this.value; // clean, unformatted number for year
-          }
-      }
-  },
-  yAxis: {
-      title: {
-          text: 'Nuclear weapon states'
-      },
-      labels: {
-          formatter: function() {
-              return this.value / 1000 +'k';
-          }
-      }
-  },
-  tooltip: {
-      pointFormat: '{series.name} produced <b>{point.y:,.0f}</b><br/>warheads in {point.x}'
-  },
-  plotOptions: {
-      area: {
-          pointStart: 1940,
-          marker: {
-              enabled: false,
-              symbol: 'circle',
-              radius: 2,
-              states: {
-                  hover: {
-                      enabled: true
-                  }
+            // this.series is an array bound to each index of the data array above. 
+            // When the data changes, it will be updated on the next setInterval
+            // tick. 
+
+            // One issue with this method is that it memory leaks. Because this is
+            // a profiling application, that's just a little self-defeating. I've left
+            // this code in here in the off chance you wanna use this.
+
+            // inspired by: http://www.highcharts.com/demo/dynamic-update
+
+            series = this.series;
+            setInterval(function () {
+              for (var i=0; i<series.length; i++) { 
+                series[i].update();
               }
+            }, 1);
+
           }
-      }
-  },
-  series: data,
+          */
+        }
+    },
+    title: {
+        text: 'US and USSR nuclear stockpiles'
+    },
+    subtitle: {
+        text: 'Source: <a href="http://thebulletin.metapress.com/content/c4120650912x74k7/fulltext.pdf">'+
+            'thebulletin.metapress.com</a>'
+    },
+    xAxis: {
+        labels: {
+            formatter: function() {
+                return this.value; // clean, unformatted number for year
+            }
+        }
+    },
+    yAxis: {
+        title: {
+            text: 'Nuclear weapon states'
+        },
+        labels: {
+            formatter: function() {
+                return this.value / 1000 +'k';
+            }
+        }
+    },
+    tooltip: {
+        pointFormat: '{series.name} produced <b>{point.y:,.0f}</b><br/>warheads in {point.x}'
+    },
+    plotOptions: {
+        area: {
+            pointStart: 1940,
+            marker: {
+                enabled: false,
+                symbol: 'circle',
+                radius: 2,
+                states: {
+                    hover: {
+                        enabled: true
+                    }
+                }
+            }
+        }
+    },
+    series: data,
+  }
+
+  $(jquery).highcharts(highchart);
+  highchart = $(jquery).highcharts();
+
+  // Sirius: I've added a method you can call to redraw the graph.
+  // If the data array you've passed in is changed, it will be
+  // reflected in the graph.
+  //
+  // Usage: 
+  // g = Graph($('#container'), dataset);
+  // g.update();
+
+  highchart.__proto__.update = function () {
+    series = this.series;
+    for (var i=0; i<series.length; i++) {
+      series[i].update();
+    }
+  }
+
+  return highchart;
 }
     
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 /* Graph initialization             */
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 $(function () {
-  $('#container').highcharts(graph);
+  g = Graph($('#container1'), data);
 });
 </script>	
 
