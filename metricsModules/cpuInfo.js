@@ -35,5 +35,7 @@ CpuInfo.prototype.usage = function() {
 	return result;
 };
 
-exports.CpuInfo = CpuInfo;
+exports.CpuInfo = function() {
+	return new CpuInfo();
+}
 

@@ -1,9 +1,7 @@
-function MonitoredHttp() {
+function MonitoredHttp(http) {
 	this.log = [];
 	this.timeOfLastCheck = new Date().getTime();
-}
 
-MonitoredHttp.prototype.monitor = function(http) {
 	var origEntry = http.createServer;
 	var monitor = this;
 	http.createServer = function(callback) {
@@ -14,23 +12,15 @@ MonitoredHttp.prototype.monitor = function(http) {
 				origEnd.call(this);
 				var endTime = new Date().getTime();
 				monitor.log.push({
-					id: 'worker1:2013112117400000',
-					worker_id: 'worker1',
-					timestamp: [2013, 11, 21, 17, 40, 00, 000],
-					type: 'event',
-					metrics: [
-						{
-							name: 'request',
-							val: endTime - req.startTime,
-							unit: 'ms'
-						}
-					]
+					name: 'request',
+					val: endTime - req.startTime,
+					unit: 'ms'
 				});
 			};
 			callback(req, res);
 		});
 	};
-};
+}
 
 MonitoredHttp.prototype.getAndClearLog = function() {
 	var requestLog = this.log;
@@ -46,5 +36,7 @@ MonitoredHttp.prototype.getAndClearLog = function() {
 	};
 }
 
-exports.MonitoredHttp = MonitoredHttp;
+exports.MonitoredHttp = function(http) {
+	return new MonitoredHttp(http);
+}
 
