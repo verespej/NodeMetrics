@@ -51,7 +51,8 @@ Graph = function (jquery, data, title) {
             formatter: function() {
                 return this.value; // clean, unformatted number for year
             }
-        }
+        },
+        title: { text: 'seconds ago' } // TODO: This is hard coded, but units are flexible
     },
     yAxis: {
         title: {
