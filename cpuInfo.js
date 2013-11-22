@@ -23,7 +23,6 @@ CpuInfo.prototype.usage = function() {
 		}
 		var idleTime = currCpus[i].times.idle - lastCpus[i].times.idle;
 		var percentUsage = totalTime <= 0 ? 0 : 100 * (totalTime - idleTime) / totalTime;
-		console.log('total=' + totalTime + ', idle=' + idleTime + ', %=' + percentUsage);
 
 		result.push({
 			timespan: timeInterval,
