@@ -103,7 +103,6 @@ Graph = function (jquery, data, title) {
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 dataset = {};
 graphs = {};
-dat = [{}];
 
 function format (json) { 
   data = [];
@@ -122,21 +121,28 @@ function fetch (timespan, completionCallback) {
 
 	var completionReq = 0;
 	var completionCount = 0;
-	for (key in dataset) { 
-		completionReq += dataset[key].length;
+	for (var instanceKey in dataset) {
+		for (var dataKey in dataset[instanceKey]) {
+			completionReq += dataset[instanceKey][dataKey].name.length;
+		}
 	}
-  for (key in dataset) { 
-    dataset[key].forEach(function(datum){
-      url = "metrics/" + key + "/" + datum.name + "/" + timespan + "/";
-      $.ajax({
-        url: url
-      }).done(function(data) {
-				datum.data = format(data);
-				completionCount++;
-				if (completionCount >= completionReq) {
-					completionCallback();
-				}
-      });
+  for (var instanceKey in dataset) { 
+		dataset[instanceKey].forEach(function(datum) {
+			for (var metricKey in datum.name) {
+				url = "metrics/" + instanceKey + "/" + datum.name[metricKey] + "/" + timespan + "/";
+				$.ajax({
+					url: url
+				}).done(function(data) {
+					datum.data = format(data);
+				}).fail(function(jqXHR, textStatus, errorThrown) {
+					console.log("ERROR: " + textStatus);
+				}).always(function() {
+					completionCount++;
+					if (completionCount >= completionReq) {
+						completionCallback();
+					}
+				});
+			}
     });
 
   }
@@ -147,7 +153,7 @@ $(function () {
   $.ajax({
     url: "hosts-and-metrics"
   }).done(function(data){
-    for (key in data) { 
+    for (var key in data) { 
       // Initialize our dataset objects 
       dataset[key] = [];
 
@@ -166,12 +172,13 @@ $(function () {
 			// fiddle.js for highchart graphs in comments in highcharts code above.
 
       // highchart
-      for (key in dataset) { 
-        containsData = false;
-        for (var i=0; i<dataset[key].length; i++) {
-          if (dataset[key][i].data.length > 0)   
-            containsData = true;
-        }
+      for (var key in dataset) { 
+				containsData = false;
+				for (var i = 0; i < dataset[key].length; i++) {
+					if (dataset[key][i].data && dataset[key][i].data.length > 0) {
+						containsData = true;
+					}
+				}
 
         if (containsData) {
           $("body").append("<div id='" + counter + "'></div>");
