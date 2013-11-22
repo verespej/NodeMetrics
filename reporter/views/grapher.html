@@ -116,16 +116,25 @@ function format (json) {
   return data;
 }
 
-function fetch (timespan) {
+function fetch (timespan, completionCallback) {
   counter = 0;
 
+	var completionReq = 0;
+	var completionCount = 0;
+	for (key in dataset) { 
+		completionReq += dataset[key].length;
+	}
   for (key in dataset) { 
     dataset[key].forEach(function(datum){
       url = "metrics/" + key + "/" + datum.name + "/" + timespan + "/";
       $.ajax({
         url: url
-      }).done(function(data) { 
-        datum.data = format(data);
+      }).done(function(data) {
+				datum.data = format(data);
+				completionCount++;
+				if (completionCount >= completionReq) {
+					completionCallback();
+				}
       });
     });
 
@@ -146,17 +155,15 @@ $(function () {
       }
     }
 
-    fetch(120);
+		fetch(120, function() {
+			// Delayed graph drawing
+			// Okay, so I can't get the real-time updating to work. Unfortunate. 
+			// I mighta made some headway. Check the comments in the highcharts code
+			// above. 
+			// contents.html has an example of real-time updating. Maybe that'll point
+			// you in the right direction. Otherwise, I provided links to real-time 
+			// fiddle.js for highchart graphs in comments in highcharts code above.
 
-    // Delayed graph drawing
-    // Okay, so I can't get the real-time updating to work. Unfortunate. 
-    // I mighta made some headway. Check the comments in the highcharts code
-    // above. 
-    // contents.html has an example of real-time updating. Maybe that'll point
-    // you in the right direction. Otherwise, I provided links to real-time 
-    // fiddle.js for highchart graphs in comments in highcharts code above.
-
-    setTimeout(function(){
       // highchart
       for (key in dataset) { 
         containsData = false;
@@ -171,8 +178,8 @@ $(function () {
           counter++;
         }
       }
-    }, 1000);
-  });
+    }); // end call to fetch
+	}); // end ajax.done for "hosts-and-metrics"
 });
 
 </script>	
