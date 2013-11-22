@@ -1,6 +1,13 @@
 var ci = require('./cpuInfo.js');
 var cpuInfo = new ci.CpuInfo();
 
+var nano = require('nano')('https://nodemetrics:msopentechhackathon@nodemetrics.cloudant.com')
+   , db_name = "workerdata"
+   , db      = nano.use(db_name);
+
+var myid = 'worker1';
+
+
 setInterval(function() {
 	var cpuUsage = cpuInfo.usage();
 	var totalPercentUsage = 0;
@@ -8,18 +15,37 @@ setInterval(function() {
 		totalPercentUsage += cpuUsage[i].percentUsage;
 	}
 
-	console.log({
-		id: 'worker1:2013112117400000',
-		worker_id: 'worker1',
-		timestamp: [2013, 11, 21, 17, 40, 00, 000],
-		type: 'interval',
-		metrics: [
-			{
-				name: 'CPU',
-				val: totalPercentUsage / cpuUsage.length,
-				unit: '%'
-			}
-		]
-	});
+  var now = new Date();
+  doc = {
+    _id: myid + ':' + now.toISOString(),
+    worker_id: myid,
+    timestamp: [
+      now.getUTCFullYear(), 
+      now.getUTCMonth(), 
+      now.getUTCDate(),
+      now.getUTCHours(), 
+      now.getUTCMinutes(),
+      now.getUTCSeconds(), 
+      now.getUTCMilliseconds()
+    ],
+    type: 'interval',
+    metrics: [
+      {
+        name: 'CPU',
+        val: totalPercentUsage / cpuUsage.length,
+        unit: '%'
+      }
+    ]
+  }
+  db.insert(doc, function (error, body, headers) {
+    
+    if(error) { 
+      return console.log(error); 
+    }
+    console.log("Insert Doc Successful");
+    console.log(doc);
+  });
+
+	
 }, 2000);
 
