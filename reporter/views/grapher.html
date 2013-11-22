@@ -11,52 +11,37 @@
 /*  Highchart Graph generator       */
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-Graph = function (jquery, data, title) {
+Graph = function (divId, initData, title) {
   highchart = {
     chart: {
         type: 'area',
         events: { 
-          /* Sirius: This is code I've added to allow for dynamic data display. */
-          /*
-          load: function () { 
-
-            // this.series is an array bound to each index of the data array above. 
-            // When the data changes, it will be updated on the next setInterval
-            // tick. 
-
-            // One issue with this method is that it memory leaks. Because this is
-            // a profiling application, that's just a little self-defeating. I've left
-            // this code in here in the off chance you wanna use this.
-
-            // Use instead: graphobj.update();
-
-            // inspired by: http://www.highcharts.com/demo/dynamic-update
-
-            series = this.series;
-            setInterval(function () {
-              for (var i=0; i<series.length; i++) { 
-                series[i].update();
-              }
-            }, 80);
-
+          load: function () { /*
+            var series = this.series;
+						setInterval(function () {
+							var removed = series[0].data.shift();
+							var idx = series[0].data.length - 1;
+							removed.x = series[0].data[idx].x + 1;
+							series[0].addPoint(removed);
+            }, 1000);*/
           }
-          */
         }
     },
     title: {
-        text: 'Profiling of ' + title
+        text: 'Instance ' + title
     },
-    xAxis: {
-        labels: {
-            formatter: function() {
-                return this.value; // clean, unformatted number for year
-            }
-        }
+		xAxis: {
+			type: 'datetime',
+			tickPixelInterval: 150
     },
     yAxis: {
-        title: {
-            text: '%'
-        },
+			title: {
+				text: '%'
+			}/*,
+			plotLines: [{
+					value: 0,
+					width: 100
+			}]*/
     },
     plotOptions: {
         area: {
@@ -72,11 +57,33 @@ Graph = function (jquery, data, title) {
             }
         }
     },
-    series: data,
-  }
+		series: [{
+			name: initData.name,
+			data:
+				(function() {
+					var data = [];
+					for (var i = 0; i < initData.data.length; i++) {
+						var time = new Date(
+							initData.data[i].x[2],
+							initData.data[i].x[3],
+							initData.data[i].x[4],
+							initData.data[i].x[5],
+							initData.data[i].x[6],
+							initData.data[i].x[7],
+							0
+							);
+						data.push({
+							x: time,
+							y: initData.data[i].y
+						});
+					}
+					return data;
+				})()
+		}]
+  }; // end highchart
 
-  $(jquery).highcharts(highchart);
-  highchart = $(jquery).highcharts();
+  $('#' + divId).highcharts(highchart);
+  var highchart = $('#' + divId).highcharts();
 
   // Sirius: I've added a method you can call to redraw the graph.
   // If the data array you've passed in is changed, it will be
@@ -103,15 +110,13 @@ Graph = function (jquery, data, title) {
 dataset = {};
 graphs = {};
 
-function format (json) { 
-  data = [];
-  // I'm makin a real strong assumption here that the json is
-  // pre-sorted via time
-  json.forEach(function(time) {
-    average = time.value.sum / time.value.count;
-    data.push(average);
-  });
-
+function format(dataPoints) { 
+	data = [];
+	for (var i = 0; i < dataPoints.length; i++) {
+		var key = dataPoints[i].key;
+    var avg = dataPoints[i].value.sum / dataPoints[i].value.count;
+		data.push({ x: key, y: avg});
+	}
   return data;
 }
 
@@ -181,10 +186,10 @@ $(function () {
 
         if (containsData) {
           $("body").append("<div id='" + counter + "'></div>");
-          graphs[key] = Graph($('#' + counter), dataset[key], key);
+          graphs[key] = Graph(counter, dataset[key][0], key);
           counter++;
         }
-      }
+			}
     }); // end call to fetch
 	}); // end ajax.done for "hosts-and-metrics"
 });
