@@ -46,7 +46,7 @@ setInterval(function() {
 			if (error) { 
 				console.log('ERROR inserting docs: ' + error); 
 			} else {
-				console.log('Insert Doc Successful');
+				console.log('Insert Doc Successful', docs);
 			}
 		});
 	}
