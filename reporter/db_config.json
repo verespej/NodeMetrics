@@ -1,0 +1,9 @@
+{
+	"scheme": "https",
+	"host": "cloudant.com",
+	"database": "workerdata",
+	"credentials" : {
+		"username": "nodemetrics",
+		"password": "msopentechhackathon"
+	}
+}
