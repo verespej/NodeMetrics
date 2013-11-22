@@ -1,13 +1,13 @@
 var reporter = require('../reporter');
 
-/*
- * GET users listing.
- */
-
 exports.metrics = function(req, res) {
-	reporter.getMetrics(function(err, rows) {
-		if (err) res.send(500, 'Error getting metrics for host');
-		res.json(rows);
+	var workerId   = req.params.workerId; 
+	var metricId   = req.params.metricId; 
+	var timeWindow = req.params.timeWindow;
+
+	reporter.getMetric(workerId, metricId, timeWindow, function(err, values) {
+		if (err) res.send(500, 'Error getting metric ' + metricId + ' for worker ' + workerId);
+		res.json(values);
 	});
 };
 
