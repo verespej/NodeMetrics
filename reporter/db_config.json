@@ -1,6 +1,6 @@
 {
 	"scheme": "https",
-	"service": "cloudant.com",
+	"host": "cloudant.com",
 	"database": "workerdata",
 	"credentials" : {
 		"username": "nodemetrics",
