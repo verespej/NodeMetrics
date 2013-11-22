@@ -10,7 +10,6 @@
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 /*  Highchart Graph generator       */
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
 Graph = function (divId, initData, title) {
   highchart = {
     chart: {
@@ -19,10 +18,11 @@ Graph = function (divId, initData, title) {
           load: function () {
             var series = this.series;
 						setInterval(function () {
-							var removed = series[0].data.shift();
 							var idx = series[0].data.length - 1;
+							var last = series[0].data[idx];
 							var time = (new Date(series[0].data[idx].x)).getTime() + 1000;
-							series[0].addPoint({ x: time, y: removed.y });
+							var nextY = last.y + (Math.random() * 2 * (Math.random() > 0.5 ? 1 : -1));
+							series[0].addPoint({ x: time, y: nextY });
             }, 1000);
           }
         }
