@@ -1,4 +1,4 @@
-var ci = require('./cpuInfo.js');
+var ci = require('./metricsModules/cpuInfo.js');
 var cpuInfo = new ci.CpuInfo();
 
 setInterval(function() {
