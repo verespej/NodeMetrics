@@ -1,0 +1,13 @@
+{
+  "name": "nodemetrics",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node server"
+  },
+  "dependencies": {
+    "nano": "4.2.1"
+  },
+  "devDependencies": {
+  }
+}
