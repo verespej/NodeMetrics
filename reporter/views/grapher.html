@@ -16,14 +16,14 @@ Graph = function (divId, initData, title) {
     chart: {
         type: 'area',
         events: { 
-          load: function () { /*
+          load: function () {
             var series = this.series;
 						setInterval(function () {
 							var removed = series[0].data.shift();
 							var idx = series[0].data.length - 1;
-							removed.x = series[0].data[idx].x + 1;
-							series[0].addPoint(removed);
-            }, 1000);*/
+							var time = (new Date(series[0].data[idx].x)).getTime() + 1000;
+							series[0].addPoint({ x: time, y: removed.y });
+            }, 1000);
           }
         }
     },
@@ -38,11 +38,11 @@ Graph = function (divId, initData, title) {
     yAxis: {
 			title: {
 				text: '%'
-			}/*,
+			},
 			plotLines: [{
 					value: 0,
 					width: 100
-			}]*/
+			}]
     },
     plotOptions: {
         area: {
