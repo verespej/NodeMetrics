@@ -34,7 +34,8 @@ data = [{
     21000, 20000, 19000, 18000, 18000, 17000, 16000]
 }, {
     name: 'Test Data',
-    data: []
+    // For some reason, not including Null will cause the graph to stretch to year 0
+    data: [null],
 }];
 
 
@@ -42,18 +43,19 @@ data = [{
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 /*  Test data                       */
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-var testDataCurrentX = 0;
-var test;
 function addDatum () {
   console.log('whadup');
   data[2].data.push(Math.random() * 40000);
 }
 
 
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/*  Highchart Graph generator       */
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 graph = {
   chart: {
-      type: 'spline',
+      type: 'area',
       events: { 
         load: function () { 
           // Insert code to dynamically update the chart here
@@ -112,7 +114,9 @@ graph = {
   series: data,
 }
     
-// Initialize the Graph
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* Graph initialization             */
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 $(function () {
   $('#container').highcharts(graph);
 });
