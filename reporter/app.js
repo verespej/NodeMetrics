@@ -28,7 +28,7 @@ app.configure('development', function(){
 });
 
 app.get('/', routes.index);
-app.get('/metrics/:workerId/:metricId/:timeWindow?', metrics.metrics);
+app.get('/metrics/:workerId/:metricId/:timeWindow?/:units?', metrics.metrics);
 app.get('/hosts',   metrics.hosts);
 app.get('/hosts-and-metrics', metrics.hostsAndMetrics);
 

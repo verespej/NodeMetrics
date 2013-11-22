@@ -6,8 +6,24 @@ var _        = require('underscore');
 var DESIGN         = 'metrics';
 var VIEW           = 'byworker_metric_time_withval_stats';
 
-var GROUP_LEVEL    = 8 // group by seconds; 
-var DEFAULT_WINDOW = 30 // minutes
+var Units = {
+	ms:      { multiplier: 1,         groupBy: 9 },
+	sec:     { multiplier: 1e3,       groupBy: 8 },
+	min:     { multiplier: 6e4,       groupBy: 7 },
+	hours:   { multiplier: 60*6e4,    groupBy: 6 },
+	days:    { multiplier: 24*60*6e4, groupBy: 5 }   
+};
+
+// Provide aliases
+Units.seconds = Units.s = Units.sec;
+Units.minutes = Units.m = Units.min;
+Units.hr      = Units.hours;
+Units.d       = Units.days;
+
+var Defaults = {
+	units:      Units.seconds,
+	timeWindow: 30
+};
 
 function generateDbUrl(config) {
 	var url = config.scheme + '://' 
@@ -20,28 +36,46 @@ function generateDbUrl(config) {
 	return url;
 }
 
-var getMetric = exports.getMetric = function (host, metric, timeWindow, params, callback) {
+var getMetric = exports.getMetric = function (host, metric, options, callback) {
 	if (!callback) {
-		callback = params;
-		params = null;
+		callback = options;
+		options  = {};
 	}
 
-	console.log({ host: host, metric: metric, timeWindow: timeWindow });
+	if (options.units && !Units[options.units]) {
+		return callback(new Error('No such unit ' + options.units));
+	}
+
+	var units      = Units[options.units] || Defaults.units;
+	var timeWindow = options.timeWindow || Defaults.timeWindow;
+
+	var interval  = timeWindow * units.multiplier;
 	var endTime   = new Date;
 	var startTime = new Date(endTime);
-	startTime.setMinutes(startTime.getMinutes() - (timeWindow || DEFAULT_WINDOW));
+
+	startTime.setTime(startTime.getTime() - interval);
+
+	console.log({ 
+		host: host, 
+		metric: metric, 
+		timeWindow: timeWindow, 
+		units: units,
+		interval: interval,
+		startTime: startTime,
+		endTime: endTime 
+	});
 
 	db.view(DESIGN, VIEW, 
 		{	stale: 'ok',
-			group_level: GROUP_LEVEL,
+			group_level: units.groupBy,
+			startkey: [host, metric, 
+				startTime.getUTCFullYear(), startTime.getUTCMonth(), startTime.getUTCDate(),
+				startTime.getUTCHours(), startTime.getUTCMinutes(), 
+				startTime.getUTCSeconds(), startTime.getUTCMilliseconds() ],
 			endkey: [host, metric, 
 				endTime.getUTCFullYear(), endTime.getUTCMonth(), endTime.getUTCDate(),
 				endTime.getUTCHours(), endTime.getUTCMinutes(), 
 				endTime.getUTCSeconds(), endTime.getUTCMilliseconds() ],
-			startkey: [host, metric, 
-				startTime.getUTCFullYear(), startTime.getUTCMonth(), startTime.getUTCDate(),
-				startTime.getUTCHours(), startTime.getUTCMinutes(), 
-				startTime.getUTCSeconds(), startTime.getUTCMilliseconds() ]
 
 		}, 
 		function(err, body) {
@@ -83,5 +117,5 @@ var getHosts = exports.getHosts = exports.getHosts = function(callback) {
 }
 
 // getMetric('10.104.212.7p52587', 'CPU', console.log)
-// getMetric('worker1', 'CPU', console.log)
+getMetric('worker1', 'CPU', console.log)
 
