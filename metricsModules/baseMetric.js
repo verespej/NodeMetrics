@@ -37,7 +37,7 @@ exports.createMetricsDoc = function(metricType, metrics) {
 
 	return {
 		_id: myid + ':' + now.toISOString(),
-		workder_id: myid,
+		instance_id: myid,
     ipaddress: myadd,
     pid: mypid,
     timestamp: [
