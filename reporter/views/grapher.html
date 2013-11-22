@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+
+<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+<script src="http://code.highcharts.com/highcharts.src.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
+<script>
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/*  Highchart Graph generator       */
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+Graph = function (jquery, data, title) {
+  highchart = {
+    chart: {
+        type: 'area',
+        events: { 
+          /* Sirius: This is code I've added to allow for dynamic data display. */
+          /*
+          load: function () { 
+
+            // this.series is an array bound to each index of the data array above. 
+            // When the data changes, it will be updated on the next setInterval
+            // tick. 
+
+            // One issue with this method is that it memory leaks. Because this is
+            // a profiling application, that's just a little self-defeating. I've left
+            // this code in here in the off chance you wanna use this.
+
+            // Use instead: graphobj.update();
+
+            // inspired by: http://www.highcharts.com/demo/dynamic-update
+
+            series = this.series;
+            setInterval(function () {
+              for (var i=0; i<series.length; i++) { 
+                series[i].update();
+              }
+            }, 80);
+
+          }
+          */
+        }
+    },
+    title: {
+        text: 'Profiling of ' + title
+    },
+    xAxis: {
+        labels: {
+            formatter: function() {
+                return this.value; // clean, unformatted number for year
+            }
+        }
+    },
+    yAxis: {
+        title: {
+            text: '%'
+        },
+    },
+    plotOptions: {
+        area: {
+            marker: {
+                enabled: false,
+                symbol: 'circle',
+                radius: 2,
+                states: {
+                    hover: {
+                        enabled: true
+                    }
+                }
+            }
+        }
+    },
+    series: data,
+  }
+
+  $(jquery).highcharts(highchart);
+  highchart = $(jquery).highcharts();
+
+  // Sirius: I've added a method you can call to redraw the graph.
+  // If the data array you've passed in is changed, it will be
+  // reflected in the graph.
+  // Inspired by: http://api.highcharts.com/highcharts#series.data.events.update
+  //
+  // Usage: 
+  // g = Graph($('#container'), dataset);
+  // g.update();
+
+  highchart.__proto__.update = function () {
+    series = this.series;
+    for (var i=0; i<series.length; i++) {
+      series[i].update();
+    }
+  }
+
+  return highchart;
+}
+    
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* Graph initialization             */
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+dataset = {};
+graphs = {};
+dat = [{}];
+
+function format (json) { 
+  data = [];
+  // I'm makin a real strong assumption here that the json is
+  // pre-sorted via time
+  json.forEach(function(time) {
+    average = time.value.sum / time.value.count;
+    data.push(average);
+  });
+
+  return data;
+}
+
+function fetch (timespan) {
+  counter = 0;
+
+  for (key in dataset) { 
+    dataset[key].forEach(function(datum){
+      url = "metrics/" + key + "/" + datum.name + "/" + timespan + "/";
+      $.ajax({
+        url: url
+      }).done(function(data) { 
+        datum.data = format(data);
+      });
+    });
+
+  }
+}
+
+$(function () { 
+  // Fetch hosts and metrics for what graphs to draw
+  $.ajax({
+    url: "hosts-and-metrics"
+  }).done(function(data){
+    for (key in data) { 
+      // Initialize our dataset objects 
+      dataset[key] = [];
+
+      for (var i=0; i<data[key].length; i++) { 
+        dataset[key].push({name: data[key]});
+      }
+    }
+
+    fetch(120);
+
+    // Delayed graph drawing
+    // Okay, so I can't get the real-time updating to work. Unfortunate. 
+    // I mighta made some headway. Check the comments in the highcharts code
+    // above. 
+    // contents.html has an example of real-time updating. Maybe that'll point
+    // you in the right direction. Otherwise, I provided links to real-time 
+    // fiddle.js for highchart graphs in comments in highcharts code above.
+
+    setTimeout(function(){
+      // highchart
+      for (key in dataset) { 
+        containsData = false;
+        for (var i=0; i<dataset[key].length; i++) {
+          if (dataset[key][i].data.length > 0)   
+            containsData = true;
+        }
+
+        if (containsData) {
+          $("body").append("<div id='" + counter + "'></div>");
+          graphs[key] = Graph($('#' + counter), dataset[key], key);
+          counter++;
+        }
+      }
+    }, 1000);
+  });
+});
+
+</script>	
+
+</body>
+</html>
